@@ -1,0 +1,61 @@
+name: 1-Click Deploy to Hugging Face Space
+
+on:
+  workflow_dispatch:
+    inputs:
+      hf_username:
+        description: "Your Hugging Face Username"
+        required: true
+      hf_space_name:
+        description: "Hugging Face Space Name (e.g. my-openlist)"
+        required: true
+        default: "listcloud"
+
+jobs:
+  deploy-to-hf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ListCloud Repository
+        uses: actions/checkout@v4
+
+      - name: Push Docker Cloud App to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USER: ${{ github.event.inputs.hf_username }}
+          HF_SPACE: ${{ github.event.inputs.hf_space_name }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::Missing HF_TOKEN secret! Add your Hugging Face Write Token in GitHub Repo Settings -> Secrets -> Actions -> HF_TOKEN."
+            exit 1
+          fi
+
+          # Create Hugging Face Docker Space automatically via API if it doesn't exist yet
+          curl -fsSL -X POST "https://huggingface.co/api/repos/create" \
+            -H "Authorization: Bearer ${HF_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"type\":\"space\",\"name\":\"${HF_SPACE}\",\"sdk\":\"docker\",\"private\":false}" || true
+
+          # Prepare README frontmatter required by Hugging Face Spaces
+          cat > /tmp/HF_README.md << 'EOF'
+          ---
+          title: ListCloud OpenList
+          emoji: ☁️
+          colorFrom: blue
+          colorTo: indigo
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          license: agpl-3.0
+          ---
+          EOF
+          cat README.md >> /tmp/HF_README.md
+          mv /tmp/HF_README.md README.md
+
+          git config user.name "ListCloud Deployer"
+          git config user.email "deploy@listcloud.local"
+          git commit -am "chore: configure Hugging Face Space metadata" || true
+
+          git push --force "https://${HF_USER}:${HF_TOKEN}@huggingface.co/spaces/${HF_USER}/${HF_SPACE}" HEAD:main
+          echo "=================================================================="
+          echo "Deployed! Your live 24/7 URL: https://${HF_USER}-${HF_SPACE}.hf.space"
+          echo "=================================================================="

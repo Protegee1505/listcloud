@@ -1,0 +1,19 @@
+services:
+  listcloud:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: listcloud
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      - PORT=7860
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-listcloud123}
+      - DATABASE_URL=${DATABASE_URL:-}
+      - SYNC_MODE=${SYNC_MODE:-none}
+      - ENABLE_ARIA2=${ENABLE_ARIA2:-true}
+      - CUSTOM_TITLE=${CUSTOM_TITLE:-ListCloud}
+    volumes:
+      - ./data:/opt/openlist/data

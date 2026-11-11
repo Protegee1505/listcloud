@@ -1,0 +1,34 @@
+# Koyeb 1-Click Free Cloud Deployment Configuration
+name: listcloud
+services:
+  - name: openlist-cloud
+    type: web
+    instance_type: free
+    regions:
+      - fra
+      - was
+    git:
+      repository: github.com/Protegee1505/listcloud
+      branch: main
+      dockerfile: Dockerfile
+    ports:
+      - port: 7860
+        protocol: http
+    routes:
+      - path: /
+        port: 7860
+    health_checks:
+      - port: 7860
+        http:
+          path: /ping
+    env:
+      - key: PORT
+        value: "7860"
+      - key: ADMIN_USERNAME
+        value: "admin"
+      - key: ADMIN_PASSWORD
+        value: "listcloud123"
+      - key: DATABASE_URL
+        value: ""
+      - key: SYNC_MODE
+        value: "none"

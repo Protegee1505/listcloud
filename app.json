@@ -1,0 +1,47 @@
+{
+  "name": "ListCloud — Free 24/7 Cloud OpenList",
+  "description": "Host your own standard or custom OpenList instance on the cloud 100% free without a credit card, accessible from any device via HTTPS URL.",
+  "repository": "https://github.com/Protegee1505/listcloud",
+  "keywords": [
+    "openlist",
+    "alist",
+    "cloud-storage",
+    "webdav",
+    "free-hosting",
+    "huggingface-spaces",
+    "docker"
+  ],
+  "env": {
+    "ADMIN_USERNAME": {
+      "description": "Initial administrator username for your OpenList instance",
+      "value": "admin"
+    },
+    "ADMIN_PASSWORD": {
+      "description": "Initial administrator password for your OpenList instance",
+      "value": "listcloud123"
+    },
+    "DATABASE_URL": {
+      "description": "Optional free PostgreSQL connection string (e.g. from Neon.tech or Aiven) for 100% permanent data across container rebuilds",
+      "required": false
+    },
+    "SYNC_MODE": {
+      "description": "Automatic SQLite cloud backup mode when DATABASE_URL is not used: none | hf | github | webdav",
+      "value": "none",
+      "required": false
+    },
+    "CUSTOM_TITLE": {
+      "description": "Custom site title for your OpenList portal",
+      "value": "ListCloud",
+      "required": false
+    },
+    "CUSTOM_BINARY_URL": {
+      "description": "Optional URL to a custom-built OpenList binary or .tar.gz release",
+      "required": false
+    },
+    "ENABLE_ARIA2": {
+      "description": "Enable built-in Aria2 offline download engine (true/false)",
+      "value": "false",
+      "required": false
+    }
+  }
+}

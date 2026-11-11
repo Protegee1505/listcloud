@@ -1,0 +1,26 @@
+# Render.com 1-Click Free Blueprint (Zero Credit Card for Web Service + External Neon/Render Postgres)
+services:
+  - type: web
+    name: listcloud-openlist
+    runtime: docker
+    plan: free
+    region: oregon
+    autoDeploy: true
+    healthCheckPath: /ping
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: ADMIN_USERNAME
+        value: "admin"
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: CUSTOM_TITLE
+        value: "My ListCloud"
+      - key: ENABLE_ARIA2
+        value: "false"
+      - key: SYNC_MODE
+        value: "none"

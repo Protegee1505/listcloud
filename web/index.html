@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ListCloud — 100% Free 24/7 Cloud OpenList Launchpad</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <div class="brand">
+        <span class="brand-icon">☁️</span>
+        <div>
+          <span class="brand-name">ListCloud</span>
+          <span class="badge-pill">100% Free • No Credit Card • 24/7</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#wizard">Cloud Builder</a>
+        <a href="#providers">Free Backends</a>
+        <a href="#persistence">Data Persistence</a>
+        <a href="https://github.com/Protegee1505/listcloud" target="_blank" rel="noopener" class="btn-outline">GitHub Repo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-tag">Powered by Official OpenList (AGPL-3.0) • Standard or Custom Builds</div>
+      <h1>Host Your Own <span class="gradient-text">OpenList on the Cloud</span> 100% Free Forever</h1>
+      <p class="hero-sub">
+        Launch a personal or custom OpenList instance with a permanent HTTPS URL accessible from any phone, laptop, tablet, or WebDAV client — zero credit card required, 16 GB RAM free cloud tier, and built-in automatic database persistence.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-val">$0.00</span>
+          <span class="stat-lbl">Forever • No Credit Card</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-val">16 GB RAM</span>
+          <span class="stat-lbl">2 vCPU on Hugging Face</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-val">24 / 7</span>
+          <span class="stat-lbl">Built-in Keep-Alive Engine</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-val">40+ Drives</span>
+          <span class="stat-lbl">OneDrive, GDrive, S3, WebDAV...</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="wizard" class="wizard-grid">
+      <div class="card config-panel">
+        <div class="card-header">
+          <h2>1. Configure Your Cloud OpenList</h2>
+          <p>Customize your credentials, edition (Standard or Custom Fork), and persistence backend.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="cloudProvider">Target 100% Free Cloud Backend</label>
+          <select id="cloudProvider">
+            <option value="hf" selected>Hugging Face Spaces (Recommended: 16GB RAM, 2 vCPU, No CC)</option>
+            <option value="render">Render Free Web Service + Neon.tech Free Postgres (No CC)</option>
+            <option value="koyeb">Koyeb Free Cloud Container (No CC)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="adminUser">Admin Username</label>
+            <input type="text" id="adminUser" value="admin" placeholder="admin" />
+          </div>
+          <div class="form-group">
+            <label for="adminPass">Admin Password</label>
+            <div class="input-with-btn">
+              <input type="text" id="adminPass" value="" placeholder="Click Generate..." />
+              <button type="button" id="genPassBtn" class="btn-small">Generate</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="siteTitle">Custom Site Title</label>
+            <input type="text" id="siteTitle" value="My ListCloud" placeholder="My Cloud Drive" />
+          </div>
+          <div class="form-group">
+            <label for="editionMode">OpenList Edition</label>
+            <select id="editionMode">
+              <option value="official" selected>Instant Official OpenList (Latest Release)</option>
+              <option value="custom">Custom OpenList Binary / Fork + Custom UI</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="customEditionFields" class="conditional-box hidden">
+          <div class="form-group">
+            <label for="customBinaryUrl">Custom OpenList Binary or .tar.gz URL (Optional)</label>
+            <input type="url" id="customBinaryUrl" placeholder="https://github.com/your-org/openlist/releases/download/v1.0/openlist-linux-musl-amd64.tar.gz" />
+          </div>
+          <div class="form-group">
+            <label for="customDistUrl">Custom Frontend Dist .tar.gz URL (Optional)</label>
+            <input type="url" id="customDistUrl" placeholder="https://example.com/custom-openlist-dist.tar.gz" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="persistenceMode">Zero-Data-Loss Cloud Persistence Mode</label>
+          <select id="persistenceMode">
+            <option value="postgres" selected>Free Cloud PostgreSQL (Neon.tech / Aiven / Supabase — Recommended)</option>
+            <option value="hf">Hugging Face Private Dataset Auto-Sync (Zero External DB Account)</option>
+            <option value="github">Private GitHub Repository Auto-Sync</option>
+            <option value="webdav">Remote WebDAV Cloud Auto-Backup</option>
+          </select>
+        </div>
+
+        <div id="postgresFields" class="conditional-box">
+          <div class="form-group">
+            <label for="databaseUrl">PostgreSQL Connection String (<code>DATABASE_URL</code>)</label>
+            <input type="text" id="databaseUrl" placeholder="postgresql://user:pass@ep-cool-cloud.us-east-2.aws.neon.tech/neondb?sslmode=require" />
+            <small class="hint">Get a 100% free no-credit-card Postgres DB in 30 seconds at <a href="https://neon.tech" target="_blank" rel="noopener">neon.tech</a> or <a href="https://aiven.io" target="_blank" rel="noopener">aiven.io</a>.</small>
+          </div>
+        </div>
+
+        <div id="hfSyncFields" class="conditional-box hidden">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="hfDatasetRepo">HF Private Dataset (<code>user/repo</code>)</label>
+              <input type="text" id="hfDatasetRepo" placeholder="yourname/listcloud-backup" />
+            </div>
+            <div class="form-group">
+              <label for="hfToken">HF Write Token (<code>HF_TOKEN</code>)</label>
+              <input type="password" id="hfToken" placeholder="hf_xxxxxxxxxxxxxxxxx" />
+            </div>
+          </div>
+        </div>
+
+        <div id="githubSyncFields" class="conditional-box hidden">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ghBackupRepo">Private GitHub Repo (<code>user/repo</code>)</label>
+              <input type="text" id="ghBackupRepo" placeholder="yourname/listcloud-state" />
+            </div>
+            <div class="form-group">
+              <label for="ghToken">GitHub Personal Token</label>
+              <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxx" />
+            </div>
+          </div>
+        </div>
+
+        <div id="webdavSyncFields" class="conditional-box hidden">
+          <div class="form-group">
+            <label for="webdavUrl">WebDAV Backup Folder URL</label>
+            <input type="url" id="webdavUrl" placeholder="https://dav.example.com/listcloud-backup/" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="webdavUser">WebDAV Username</label>
+              <input type="text" id="webdavUser" placeholder="user" />
+            </div>
+            <div class="form-group">
+              <label for="webdavPass">WebDAV Password</label>
+              <input type="password" id="webdavPass" placeholder="password" />
+            </div>
+          </div>
+        </div>
+
+        <div class="toggles-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="enableAria2" checked />
+            <span>Enable Built-in Aria2 Offline Downloader</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="enableKeepAlive" checked />
+            <span>Enable 24/7 Keep-Alive Self-Pinger</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card output-panel">
+        <div class="card-header">
+          <h2>2. Launch Your Cloud Instance</h2>
+          <p>Click a 1-Click Cloud Deploy button below and paste the generated secrets/variables.</p>
+        </div>
+
+        <div class="deploy-buttons">
+          <a id="deployHfBtn" href="https://huggingface.co/new-space?template=Protegee1505/listcloud" target="_blank" rel="noopener" class="deploy-btn hf-btn">
+            <span class="btn-emoji">🤗</span>
+            <div>
+              <strong>1-Click Deploy on Hugging Face Spaces</strong>
+              <span>16 GB RAM • 2 vCPU • 100% Free • Zero Credit Card</span>
+            </div>
+          </a>
+
+          <a id="deployRenderBtn" href="https://render.com/deploy?repo=https://github.com/Protegee1505/listcloud" target="_blank" rel="noopener" class="deploy-btn render-btn">
+            <span class="btn-emoji">⚡</span>
+            <div>
+              <strong>1-Click Deploy on Render Cloud</strong>
+              <span>Free Web Service Blueprint • Auto HTTPS URL</span>
+            </div>
+          </a>
+
+          <a id="deployKoyebBtn" href="https://app.koyeb.com/deploy?type=git&repository=github.com/Protegee1505/listcloud&branch=main&name=listcloud" target="_blank" rel="noopener" class="deploy-btn koyeb-btn">
+            <span class="btn-emoji">🚀</span>
+            <div>
+              <strong>1-Click Deploy on Koyeb</strong>
+              <span>Global Edge Container • Direct GitHub Sync</span>
+            </div>
+          </a>
+        </div>
+
+        <div class="tabs-bar">
+          <button type="button" class="tab-btn active" data-tab="env">Cloud Environment Variables (.env)</button>
+          <button type="button" class="tab-btn" data-tab="config">OpenList config.json</button>
+          <button type="button" class="tab-btn" data-tab="url">Your Live URL Preview</button>
+        </div>
+
+        <div class="code-box-wrap">
+          <button type="button" id="copyCodeBtn" class="copy-btn">Copy</button>
+          <pre><code id="generatedOutput"></code></pre>
+        </div>
+
+        <div class="callout-box">
+          <strong>How to keep it online 24/7:</strong>
+          <p>
+            Once deployed, your instance URL (e.g. <code>https://username-listcloud.hf.space</code>) is live worldwide! Add that URL to your forked GitHub repo's <code>INSTANCE_URLS</code> variable to trigger the free 10-minute GitHub Action keep-alive ping.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="providers" class="info-section">
+      <h2>Why This Stack Is the Best 100% Free Cloud Setup</h2>
+      <div class="feature-cards">
+        <div class="feature-card">
+          <h3>🤗 Hugging Face Docker Spaces</h3>
+          <p>Provides an unmatched <strong>2 vCPUs and 16 GB of RAM</strong> completely free with no credit card ever asked. Runs our custom Alpine Docker container on port <code>7860</code> with direct HTTPS URLs (`*.hf.space`).</p>
+        </div>
+        <div class="feature-card">
+          <h3>🐘 Durable Cloud State</h3>
+          <p>Connect a free <strong>Neon.tech PostgreSQL</strong> database (`DATABASE_URL`) or enable automatic SQLite snapshots (`SYNC_MODE=hf|github|webdav`). Even when cloud containers redeploy, your drives, users, and shares never disappear.</p>
+        </div>
+        <div class="feature-card">
+          <h3>🛠️ Custom OpenList Ready</h3>
+          <p>Want to run your own modified OpenList fork or custom frontend build? Pass <code>CUSTOM_BINARY_URL</code> or <code>CUSTOM_DIST_URL</code> and the container swaps in your custom build at boot time.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>
+        <strong>ListCloud</strong> is an independent open-source cloud deployment toolkit licensed under AGPL-3.0.
+        Powered by <a href="https://github.com/OpenListTeam/OpenList" target="_blank" rel="noopener">OpenListTeam/OpenList</a>.
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
