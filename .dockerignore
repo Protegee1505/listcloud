@@ -1,6 +1,6 @@
 .git
 .github
-web
+docs
 data
 backup
 *.log

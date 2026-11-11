@@ -137,7 +137,7 @@ Deploy [`cloudflare-worker/worker.js`](./cloudflare-worker/worker.js) as a Cloud
 
 ### Publish the config builder
 
-The interactive builder in [`web/`](./web) is static. Publish it with **Settings → Pages → Deploy from a branch → `main` / `/web`**, or run the included [`workflows-templates/pages.yml`](./workflows-templates/pages.yml) as a workflow.
+The interactive builder in [`docs/`](./docs) is static. Publish it with **Settings → Pages → Deploy from a branch → `main` / `/docs`**, or run the included [`workflows-templates/pages.yml`](./workflows-templates/pages.yml) as a workflow.
 
 ---
 
@@ -220,7 +220,7 @@ listcloud/
 │   ├── db-sync.sh              # SQLite snapshots to HF / GitHub / WebDAV
 │   └── keepalive.sh            # Internal self-ping
 ├── cloudflare-worker/worker.js # Optional custom-domain proxy
-├── web/                        # Static config builder
+├── docs/                       # Static config builder (GitHub Pages)
 └── workflows-templates/        # Keep-alive and Pages workflows
 ```
 
