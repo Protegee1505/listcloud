@@ -1,0 +1,9 @@
+.git
+.github
+web
+data
+backup
+*.log
+*.db
+.env
+README.md

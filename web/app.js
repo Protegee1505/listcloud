@@ -1,6 +1,5 @@
 (function () {
   const els = {
-    cloudProvider: document.getElementById("cloudProvider"),
     adminUser: document.getElementById("adminUser"),
     adminPass: document.getElementById("adminPass"),
     genPassBtn: document.getElementById("genPassBtn"),
@@ -23,13 +22,13 @@
     webdavUser: document.getElementById("webdavUser"),
     webdavPass: document.getElementById("webdavPass"),
     enableAria2: document.getElementById("enableAria2"),
-    enableKeepAlive: document.getElementById("enableKeepAlive"),
     generatedOutput: document.getElementById("generatedOutput"),
     copyCodeBtn: document.getElementById("copyCodeBtn"),
     tabBtns: document.querySelectorAll(".tab-btn"),
   };
 
   let activeTab = "env";
+  const jwtSecret = randomString(32);
 
   function randomString(len) {
     const chars = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -40,31 +39,26 @@
     return out;
   }
 
-  function getPortForProvider(provider) {
-    if (provider === "render") return 10000;
-    return 7860;
-  }
-
   function updateVisibility() {
     const isCustom = els.editionMode.value === "custom";
     els.customEditionFields.classList.toggle("hidden", !isCustom);
 
-    const pMode = els.persistenceMode.value;
-    els.postgresFields.classList.toggle("hidden", pMode !== "postgres");
-    els.hfSyncFields.classList.toggle("hidden", pMode !== "hf");
-    els.githubSyncFields.classList.toggle("hidden", pMode !== "github");
-    els.webdavSyncFields.classList.toggle("hidden", pMode !== "webdav");
+    const mode = els.persistenceMode.value;
+    els.postgresFields.classList.toggle("hidden", mode !== "postgres");
+    els.hfSyncFields.classList.toggle("hidden", mode !== "hf");
+    els.githubSyncFields.classList.toggle("hidden", mode !== "github");
+    els.webdavSyncFields.classList.toggle("hidden", mode !== "webdav");
   }
 
   function buildEnvConfig() {
-    const port = getPortForProvider(els.cloudProvider.value);
-    const pMode = els.persistenceMode.value;
+    const mode = els.persistenceMode.value;
     const lines = [
-      "# ListCloud — 100% Free 24/7 Cloud OpenList Environment",
-      `PORT=${port}`,
+      "# ListCloud on Render (Free) — paste these into the Blueprint",
+      "PORT=10000",
       `ADMIN_USERNAME=${els.adminUser.value.trim() || "admin"}`,
-      `ADMIN_PASSWORD=${els.adminPass.value.trim() || "listcloud123"}`,
-      `CUSTOM_TITLE="${els.siteTitle.value.trim() || "My ListCloud"}"`,
+      `ADMIN_PASSWORD=${els.adminPass.value.trim()}`,
+      `CUSTOM_TITLE="${els.siteTitle.value.trim()}"`,
+      `JWT_SECRET=${jwtSecret}`,
       `ENABLE_ARIA2=${els.enableAria2.checked ? "true" : "false"}`,
     ];
 
@@ -77,93 +71,69 @@
       }
     }
 
-    if (pMode === "postgres") {
+    if (mode === "postgres") {
       lines.push("SYNC_MODE=none");
       lines.push(
-        `DATABASE_URL="${els.databaseUrl.value.trim() || "postgresql://user:pass@ep-free-db.neon.tech/neondb?sslmode=require"}"`
+        `DATABASE_URL="${els.databaseUrl.value.trim() || "postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require"}"`
       );
-    } else if (pMode === "hf") {
+    } else if (mode === "hf") {
       lines.push("SYNC_MODE=hf");
       lines.push(`HF_DATASET_REPO="${els.hfDatasetRepo.value.trim() || "username/listcloud-backup"}"`);
       lines.push(`HF_TOKEN="${els.hfToken.value.trim() || "hf_your_write_token"}"`);
-    } else if (pMode === "github") {
+    } else if (mode === "github") {
       lines.push("SYNC_MODE=github");
       lines.push(`GITHUB_BACKUP_REPO="${els.ghBackupRepo.value.trim() || "username/listcloud-state"}"`);
-      lines.push(`GITHUB_TOKEN="${els.ghToken.value.trim() || "ghp_your_token"}"`);
-    } else if (pMode === "webdav") {
+      lines.push(`GITHUB_TOKEN="${els.ghToken.value.trim() || "github_pat_xxx"}"`);
+    } else {
       lines.push("SYNC_MODE=webdav");
       lines.push(`WEBDAV_URL="${els.webdavUrl.value.trim() || "https://dav.example.com/backup/"}"`);
       lines.push(`WEBDAV_USER="${els.webdavUser.value.trim() || "user"}"`);
       lines.push(`WEBDAV_PASSWORD="${els.webdavPass.value.trim() || "password"}"`);
     }
 
-    if (els.enableKeepAlive.checked) {
-      lines.push("KEEPALIVE_INTERVAL=480");
-    }
-
     return lines.join("\n");
   }
 
-  function buildJsonConfig() {
-    const port = getPortForProvider(els.cloudProvider.value);
-    const pMode = els.persistenceMode.value;
-    const isPostgres = pMode === "postgres";
-
-    const cfg = {
-      force: false,
-      site_url: "",
-      cdn: "",
-      jwt_secret: randomString(16),
-      token_expires_in: 48,
-      database: {
-        type: isPostgres ? "postgres" : "sqlite3",
-        host: isPostgres ? "ep-free-db.neon.tech" : "",
-        port: isPostgres ? 5432 : 0,
-        user: isPostgres ? "neondb_owner" : "",
-        password: isPostgres ? "YOUR_DB_PASSWORD" : "",
-        name: isPostgres ? "neondb" : "",
-        db_file: "/opt/openlist/data/data.db",
-        table_prefix: "x_",
-        ssl_mode: isPostgres ? "require" : "",
-      },
-      scheme: {
-        address: "0.0.0.0",
-        http_port: port,
-        https_port: -1,
-        force_https: false,
-      },
-      temp_dir: "/opt/openlist/data/temp",
-      bleve_dir: "/opt/openlist/data/bleve",
-      MaxConcurrency: 64,
-    };
-
-    return JSON.stringify(cfg, null, 2);
+  function buildUrlPreview() {
+    const user = els.adminUser.value.trim() || "admin";
+    const pass = els.adminPass.value.trim();
+    return [
+      "=== Your instance (copy the real URL from the Render dashboard) ===",
+      "",
+      "Web UI   : https://your-service.onrender.com",
+      "WebDAV   : https://your-service.onrender.com/dav",
+      "Health   : https://your-service.onrender.com/ping",
+      "",
+      "=== First login ===",
+      pass
+        ? `Username : ${user}\nPassword : ${pass}`
+        : "No password was pre-set: the first visit opens OpenList's setup wizard.",
+      "",
+      "The first request after a spin-down takes about a minute.",
+    ].join("\n");
   }
 
-  function buildUrlPreview() {
-    const provider = els.cloudProvider.value;
-    const user = els.adminUser.value.trim() || "admin";
-    const pass = els.adminPass.value.trim() || "listcloud123";
-
-    let urlExample = "https://<your-hf-username>-listcloud.hf.space";
-    if (provider === "render") {
-      urlExample = "https://listcloud-openlist.onrender.com";
-    } else if (provider === "koyeb") {
-      urlExample = "https://listcloud-<your-org>.koyeb.app";
-    }
-
+  function buildChecklist() {
     return [
-      "=== Your Live 24/7 Cloud OpenList Endpoints ===",
+      "1. Create a free Neon project at neon.com (no card) and copy the",
+      "   postgresql://... connection string.",
       "",
-      `Web Portal URL : ${urlExample}`,
-      `WebDAV URL     : ${urlExample}/dav`,
-      `Health Check   : ${urlExample}/ping`,
+      "2. Open https://render.com/deploy?repo=https://github.com/Protegee1505/listcloud",
+      "   sign in with GitHub, keep the Free plan.",
       "",
-      "=== Initial Login Credentials ===",
-      `Username       : ${user}`,
-      `Password       : ${pass}`,
+      "3. Paste DATABASE_URL, ADMIN_PASSWORD and CUSTOM_TITLE from the",
+      "   Environment tab, then click Apply.",
       "",
-      "Access from anywhere: Desktop browser, iOS/Android, Infuse, VidHub, RaiDrive, rclone, or Kodi!",
+      "4. Wait for the build (3-6 min) and open the *.onrender.com URL.",
+      "   Log in, or complete the setup wizard if no password was set.",
+      "",
+      "5. Add storage: Manage -> Storage -> Add storage -> choose provider.",
+      "",
+      "6. Keep it awake: fork the repo, then Settings -> Secrets and",
+      "   variables -> Actions -> Variables -> INSTANCE_URLS = your URL.",
+      "   Enable the 'Keep the free instance awake' workflow.",
+      "",
+      "Optional: cron-job.org pinging /ping every 5 minutes as a backup.",
     ].join("\n");
   }
 
@@ -171,10 +141,10 @@
     updateVisibility();
     if (activeTab === "env") {
       els.generatedOutput.textContent = buildEnvConfig();
-    } else if (activeTab === "config") {
-      els.generatedOutput.textContent = buildJsonConfig();
-    } else {
+    } else if (activeTab === "url") {
       els.generatedOutput.textContent = buildUrlPreview();
+    } else {
+      els.generatedOutput.textContent = buildChecklist();
     }
   }
 
@@ -194,10 +164,10 @@
 
   els.copyCodeBtn.addEventListener("click", () => {
     navigator.clipboard.writeText(els.generatedOutput.textContent).then(() => {
-      const orig = els.copyCodeBtn.textContent;
-      els.copyCodeBtn.textContent = "Copied!";
+      const original = els.copyCodeBtn.textContent;
+      els.copyCodeBtn.textContent = "Copied";
       setTimeout(() => {
-        els.copyCodeBtn.textContent = orig;
+        els.copyCodeBtn.textContent = original;
       }, 1500);
     });
   });
@@ -207,7 +177,5 @@
     input.addEventListener("change", renderOutput);
   });
 
-  // Initialize default password
-  els.adminPass.value = "LC_" + randomString(10);
   renderOutput();
 })();

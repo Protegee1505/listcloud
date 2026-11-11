@@ -1,21 +1,28 @@
-# Render.com 1-Click Free Blueprint (Zero Credit Card for Web Service + External Neon/Render Postgres)
+# Render Blueprint — ListCloud (OpenList) on the Free instance
+# No credit card required for Render Free web services.
+# Docs: https://render.com/docs/free
 services:
   - type: web
-    name: listcloud-openlist
+    name: listcloud
     runtime: docker
     plan: free
     region: oregon
-    autoDeploy: true
+    autoDeploy: false
     healthCheckPath: /ping
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
         value: "10000"
       - key: ADMIN_USERNAME
         value: "admin"
+      # Leave empty to use OpenList's browser setup wizard on first visit.
+      # Set a value (4+ chars) to create the admin automatically on first boot.
       - key: ADMIN_PASSWORD
-        generateValue: true
+        sync: false
       - key: JWT_SECRET
         generateValue: true
+      # Free PostgreSQL from neon.com (no credit card). Required for persistence:
+      # Render's free filesystem is ephemeral.
       - key: DATABASE_URL
         sync: false
       - key: CUSTOM_TITLE

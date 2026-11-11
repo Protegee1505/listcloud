@@ -6,14 +6,14 @@ services:
     container_name: listcloud
     restart: unless-stopped
     ports:
-      - "7860:7860"
+      - "10000:10000"
     environment:
-      - PORT=7860
+      - PORT=10000
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-listcloud123}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - DATABASE_URL=${DATABASE_URL:-}
       - SYNC_MODE=${SYNC_MODE:-none}
-      - ENABLE_ARIA2=${ENABLE_ARIA2:-true}
-      - CUSTOM_TITLE=${CUSTOM_TITLE:-ListCloud}
+      - ENABLE_ARIA2=${ENABLE_ARIA2:-false}
+      - CUSTOM_TITLE=${CUSTOM_TITLE:-My ListCloud}
     volumes:
       - ./data:/opt/openlist/data

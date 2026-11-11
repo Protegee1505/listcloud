@@ -1,112 +1,231 @@
----
-title: ListCloud OpenList
-emoji: ☁️
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: false
-license: agpl-3.0
----
-
-# ☁️ ListCloud — 100% Free, Zero-Credit-Card 24/7 Cloud Hosting for OpenList
+# ☁️ ListCloud — run OpenList on the cloud for free, without a credit card
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%203.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Powered by OpenList](https://img.shields.io/badge/Powered%20By-OpenList-00b4d8)](https://github.com/OpenListTeam/OpenList)
-[![Deploy on Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Deploy%20to-HF%20Spaces%20(Free%2016GB%20RAM)-yellow)](https://huggingface.co/new-space?template=Protegee1505/listcloud)
+[![Powered by OpenList](https://img.shields.io/badge/Powered%20by-OpenList-00b4d8)](https://github.com/OpenListTeam/OpenList)
 [![Deploy to Render](https://img.shields.io/badge/%E2%9A%A1%20Deploy%20to-Render%20(Free)-46E3B7)](https://render.com/deploy?repo=https://github.com/Protegee1505/listcloud)
-[![Deploy to Koyeb](https://img.shields.io/badge/%F0%9F%9A%80%20Deploy%20to-Koyeb%20(Free)-121212)](https://app.koyeb.com/deploy?type=git&repository=github.com/Protegee1505/listcloud&branch=main&name=listcloud)
 
-**ListCloud** lets anyone deploy and host their own **instant or custom [OpenList](https://github.com/OpenListTeam/OpenList)** instance on the cloud **100% free forever — with zero credit card required** — and access it via a permanent HTTPS URL from any phone, laptop, tablet, smart TV, or WebDAV client.
+ListCloud deploys a **standard or custom [OpenList](https://github.com/OpenListTeam/OpenList)** instance to the cloud and gives you a permanent HTTPS URL you can open from any phone, laptop, tablet, TV or WebDAV client.
 
----
-
-## ✨ Why ListCloud?
-
-1. **100% Free & Zero Credit Card Required**:
-   * Built natively for **Hugging Face Docker Spaces** (giving you **2 vCPUs + 16 GB RAM** for free without a credit card), **Render Free Web Services**, and **Koyeb Free Containers**.
-2. **Never Lose Your Settings or Mounted Drives (4 Persistence Modes)**:
-   * **External Free PostgreSQL (`DATABASE_URL`)**: Plug in a free 0.5 GB PostgreSQL database from [Neon.tech](https://neon.tech) or [Aiven](https://aiven.io) (no credit card). Even if your container rebuilds, all users, storage drives, and settings stay 100% intact.
-   * **Hugging Face Private Dataset Sync (`SYNC_MODE=hf`)**: Automatically backs up your SQLite `data.db` and `config.json` to a private Hugging Face Dataset and restores it on boot.
-   * **GitHub Private Repo Sync (`SYNC_MODE=github`)**: Automatically commits encrypted/archived SQLite state snapshots to a private GitHub repo.
-   * **WebDAV Cloud Sync (`SYNC_MODE=webdav`)**: Automatically mirrors state to any WebDAV cloud drive.
-3. **True 24/7 Uptime (No Cold-Start Sleeping)**:
-   * Includes ready-to-use GitHub Action templates in [`workflows-templates/`](./workflows-templates) (`keepalive.yml`, `deploy-hf.yml`, `pages.yml`) that ping your cloud URL every 10 minutes + an internal self-pinging daemon (`scripts/keepalive.sh`).
-4. **Supports Both Instant Official OpenList & Custom OpenList Builds**:
-   * **Instant Mode**: Runs the latest official `OpenListTeam/OpenList` release out-of-the-box with automatic `ADMIN_PASSWORD` setup.
-   * **Custom Mode**: Pass `CUSTOM_BINARY_URL` or `CUSTOM_DIST_URL` to run your own custom OpenList fork, custom drivers, or custom UI theme, plus built-in Aria2 offline download support (`ENABLE_ARIA2=true`).
+* **$0 forever, no credit card**
+* **Persistent data** via a free PostgreSQL database (Neon) or automatic SQLite snapshots
+* **Stays awake** with a free 5-minute keep-alive ping
+* **Standard or custom builds** (custom binary, custom UI, optional Aria2)
 
 ---
 
-## 🚀 1-Click Cloud Deployment (No Credit Card)
+## ⚠️ Read this first: the free-hosting landscape changed in 2026
 
-### Option A: Hugging Face Spaces (Recommended — 16 GB RAM, 2 vCPU, 100% Free)
+Many older tutorials still say "deploy OpenList to Hugging Face Spaces or Koyeb for free". That is no longer true:
 
-1. Click **[Duplicate / Create Space on Hugging Face](https://huggingface.co/new-space)** and choose **Docker** as the SDK (or enable `workflows-templates/deploy-hf.yml` in `.github/workflows/`).
-2. In your Space's **Settings → Variables and secrets**, set:
-   * `ADMIN_USERNAME` = `admin`
-   * `ADMIN_PASSWORD` = `your-strong-password`
-   * `DATABASE_URL` = `postgresql://...` *(Optional: free Postgres from [Neon.tech](https://neon.tech) so data persists forever)*
-   * Or set `SYNC_MODE=hf`, `HF_TOKEN=hf_...`, and `HF_DATASET_REPO=yourname/listcloud-backup` to auto-backup SQLite to a private HF dataset!
-3. Once the Space says **Running**, open your permanent URL:
+| Platform | Status (November 2026) |
+| :--- | :--- |
+| **Hugging Face Docker Spaces** | Docker and Gradio Spaces **require a paid plan** (PRO/Team). Only Static Spaces and limited ZeroGPU Gradio Spaces are free. |
+| **Koyeb** | Free Starter plan is **closed to new accounts**; a credit card with a $29 hold is required, and new accounts start on the $29/month Pro plan. |
+| **Render Free** | **Still free, no credit card.** 512 MB RAM, 0.1 CPU, 750 instance hours/month. Spins down after 15 minutes idle (keep-alive fixes this). |
+| **Neon Free Postgres** | **Free forever, no credit card.** 1 GB storage, 100 compute-hours/month, scales to zero after 5 minutes idle. |
+
+So ListCloud targets **Render Free + Neon Free Postgres** as the primary path. The Docker image still runs anywhere Docker runs, including a Hugging Face account that already has grandfathered free access.
+
+---
+
+## 🚀 Quick start (about 10 minutes)
+
+### Step 1 — Create a free PostgreSQL database (Neon)
+
+Render's free filesystem is **ephemeral**: it is wiped on every restart, redeploy and spin-down. A database is what keeps your users, storage mounts and settings.
+
+1. Go to **[neon.com](https://neon.com)** and sign up with GitHub or email (no credit card).
+2. Click **New Project**, pick any region close to you, and create it.
+3. On the project dashboard, click **Connect** and copy the **connection string**. It looks like:
+
    ```text
-   https://<your-hf-username>-<space-name>.hf.space
+   postgresql://user:password@ep-something.region.aws.neon.tech/neondb?sslmode=require
    ```
 
-### Option B: Render + Neon.tech Free PostgreSQL
+   Use the **direct** connection string (leave "Pooled connection" unchecked). Keep this string — it is your `DATABASE_URL`.
 
-1. Create a free PostgreSQL database at [neon.tech](https://neon.tech) (no credit card required) and copy the `postgresql://...` connection string.
-2. Click **[Deploy to Render](https://render.com/deploy?repo=https://github.com/Protegee1505/listcloud)**.
-3. Paste your `DATABASE_URL` and set `ADMIN_PASSWORD`.
-4. Render builds the container and gives you a live `https://listcloud-openlist.onrender.com` URL.
+> Prefer not to create a database? You can skip this and use `SYNC_MODE=hf` later, which snapshots SQLite to a private Hugging Face **Dataset** (Datasets are still free). You will lose changes made since the last snapshot whenever the container stops.
 
-### Option C: Koyeb Free Cloud Container
+### Step 2 — Deploy to Render
 
-1. Click **[Deploy to Koyeb](https://app.koyeb.com/deploy?type=git&repository=github.com/Protegee1505/listcloud&branch=main&name=listcloud)**.
-2. Set `ADMIN_PASSWORD` and `DATABASE_URL` in the environment variables section and click **Deploy**.
+1. Open **[render.com/deploy?repo=https://github.com/Protegee1505/listcloud](https://render.com/deploy?repo=https://github.com/Protegee1505/listcloud)**.
+2. Sign in with GitHub when asked.
+3. Render reads [`render.yaml`](./render.yaml) and shows a Blueprint named **listcloud**. Keep the **Free** plan.
+4. Fill in the environment variables:
+   * **`DATABASE_URL`** → paste the Neon connection string from Step 1.
+   * **`ADMIN_PASSWORD`** → enter a password of 4+ characters, **or leave it empty** to get OpenList's browser setup wizard on first visit.
+   * `ADMIN_USERNAME` is `admin` and only matters when `ADMIN_PASSWORD` is set.
+   * `CUSTOM_TITLE` → your site name.
+5. Click **Apply** / **Deploy** and wait for the build (typically 3–6 minutes).
+
+> Render might ask you to verify your account by email, but does not require a card for Free web services. If you have no payment method on file, Render suspends services when you hit a limit instead of billing you.
+
+### Step 3 — Open your instance
+
+1. In the Render dashboard, open the **listcloud** service and copy its URL, for example:
+
+   ```text
+   https://listcloud-ab12.onrender.com
+   ```
+
+2. Open it in a browser.
+   * If you set `ADMIN_PASSWORD`, log in as `admin` with that password.
+   * If you left it empty, complete the setup wizard: choose your username, password and site title.
+
+The first request after a spin-down can take ~1 minute while Render boots the container.
+
+### Step 4 — Add your storage
+
+1. Log in, open the menu (bottom-left avatar), then **Manage**.
+2. Go to **Storage → Add storage**.
+3. Pick a provider (OneDrive, Google Drive, S3, WebDAV, FTP, 115, PikPak, and 40+ more), fill in the credentials and **Save**.
+4. Go back to **Home** and open the mounted storage.
+
+### Step 5 — Keep it online 24/7 (free)
+
+Render spins a Free service down after **15 minutes without traffic**. A ping every 5 minutes keeps it warm and still fits inside the **750 free instance hours/month** (a 31-day month is 744 hours).
+
+**Option A — GitHub Actions (free):**
+
+1. **Fork** this repository on GitHub.
+2. In your fork: **Settings → Secrets and variables → Actions → Variables → New repository variable**.
+3. Name `INSTANCE_URLS`, value `https://your-service.onrender.com`.
+4. Open the **Actions** tab and enable **Keep the free instance awake** (it runs every 5 minutes).
+
+**Option B — cron-job.org (also free):** create a job that GETs `https://your-service.onrender.com/ping` every 5 minutes.
+
+> GitHub sometimes delays scheduled runs. If a run slips past 15 minutes you may see one cold start; a second scheduler makes this rarer.
+
+### Step 6 — Use it from anywhere
+
+| What | URL |
+| :--- | :--- |
+| Web UI | `https://your-service.onrender.com` |
+| WebDAV | `https://your-service.onrender.com/dav` |
+| Health check | `https://your-service.onrender.com/ping` |
+
+Log in with your OpenList username/password. For WebDAV in apps like Infuse, RaiDrive, rclone or Kodi, use the same URL and credentials (or an app password from **Manage → Users**).
 
 ---
 
-## 🌐 Interactive Web Launchpad & Config Builder
+## 🧩 Optional features
 
-This repository includes an interactive **Web Launchpad** inside [`web/`](./web/index.html) (ready for GitHub Pages or local browser use).
-Use it to visually configure your instance, generate your `.env` / `config.json`, and launch your cloud OpenList in seconds.
+### Automatic SQLite backups instead of a database
+
+If you don't use `DATABASE_URL`, set one of these on Render and ListCloud snapshots `data.db` + `config.json`:
+
+| `SYNC_MODE` | What it needs | Notes |
+| :--- | :--- | :--- |
+| `hf` | `HF_TOKEN`, `HF_DATASET_REPO` (e.g. `you/listcloud-backup`) | Private Hugging Face **Dataset**. Create a write token at huggingface.co/settings/tokens. |
+| `github` | `GITHUB_TOKEN`, `GITHUB_BACKUP_REPO` (e.g. `you/listcloud-state`) | Private GitHub repo, fine-grained token with Contents write. |
+| `webdav` | `WEBDAV_URL`, `WEBDAV_USER`, `WEBDAV_PASSWORD` | Any WebDAV storage. |
+
+Snapshots run every `SYNC_INTERVAL` seconds (default 300) when the database changes, on boot restore, and on shutdown. A crash can still lose the last few minutes of changes — a real database is safer.
+
+### Custom OpenList build
+
+| Variable | Purpose |
+| :--- | :--- |
+| `CUSTOM_BINARY_URL` | URL of a custom `openlist` binary, or a `.tar.gz` whose root contains `openlist`. Replaces the bundled binary at boot. |
+| `CUSTOM_DIST_URL` | URL of a custom frontend `dist.tar.gz` (with `index.html` at its root). Served as the UI. |
+| `ENABLE_ARIA2` | `true` to start Aria2 RPC on port 6800. Needs RAM; leave `false` on the 512 MB free instance. |
+| `ENABLE_FFMPEG` | Build-time arg only: `docker build --build-arg INSTALL_FFMPEG=true`. Not available on Render's prebuilt image. |
+
+### Custom domain (optional, free)
+
+Deploy [`cloudflare-worker/worker.js`](./cloudflare-worker/worker.js) as a Cloudflare Worker (Workers' free plan needs no card), set `UPSTREAM_URL` to your Render URL, then attach a domain to the Worker.
+
+### Publish the config builder
+
+The interactive builder in [`web/`](./web) is static. Publish it with **Settings → Pages → Deploy from a branch → `main` / `/web`**, or run the included [`workflows-templates/pages.yml`](./workflows-templates/pages.yml) as a workflow.
 
 ---
 
-## ⚙️ Environment Variables Reference
+## 💻 Run locally
+
+```bash
+git clone https://github.com/Protegee1505/listcloud.git
+cd listcloud
+docker compose up --build
+```
+
+Open `http://localhost:10000`. Local runs use SQLite in `./data`, which is fine because the folder is on your machine.
+
+Without Docker:
+
+```bash
+curl -fsSL https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-linux-musl-amd64.tar.gz | tar -xz
+PORT=10000 ADMIN_PASSWORD=change-me ./openlist server --data ./data --no-prefix
+```
+
+---
+
+## ⚙️ Environment variables
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` | `7860` | HTTP port bound by OpenList (`7860` on HF Spaces, `10000` on Render) |
-| `ADMIN_USERNAME` | `admin` | Initial admin username |
-| `ADMIN_PASSWORD` | *(auto/env)* | Sets the admin password automatically on boot |
-| `CUSTOM_TITLE` | `ListCloud` | Custom site title |
-| `DATABASE_URL` | *(empty)* | Free Postgres/MySQL URL (`postgresql://user:pass@host/db?sslmode=require`) |
-| `SYNC_MODE` | `none` | Auto-sync mode when using SQLite: `none`, `hf`, `github`, or `webdav` |
-| `HF_DATASET_REPO` | *(empty)* | Private HF Dataset (`username/repo`) when `SYNC_MODE=hf` |
-| `HF_TOKEN` | *(empty)* | Hugging Face write token for `SYNC_MODE=hf` |
-| `GITHUB_BACKUP_REPO` | *(empty)* | Private GitHub repo (`username/repo`) when `SYNC_MODE=github` |
-| `GITHUB_TOKEN` | *(empty)* | GitHub PAT when `SYNC_MODE=github` |
-| `WEBDAV_URL` | *(empty)* | Remote WebDAV folder URL when `SYNC_MODE=webdav` |
-| `CUSTOM_BINARY_URL` | *(empty)* | URL to a custom OpenList binary or `.tar.gz` release |
-| `CUSTOM_DIST_URL` | *(empty)* | URL to a custom OpenList frontend `dist.tar.gz` |
-| `ENABLE_ARIA2` | `false` | Set to `true` to launch the built-in Aria2 RPC daemon on port `6800` |
-| `KEEPALIVE_URL` | *(auto)* | External URL pinged periodically to keep free cloud routers awake |
+| `PORT` | `10000` | HTTP port. Render sets this automatically. |
+| `ADMIN_USERNAME` | `admin` | Only used when `ADMIN_PASSWORD` is set (pre-provisioning). |
+| `ADMIN_PASSWORD` | *(empty)* | 4+ chars. Empty means "show the setup wizard". Applied only on first setup, never afterwards. |
+| `CUSTOM_TITLE` | *(empty)* | Site title applied during pre-provisioning. |
+| `DATABASE_URL` | *(empty)* | `postgresql://...`. Strongly recommended for persistence. |
+| `JWT_SECRET` | random | Keeps sessions valid across restarts. Set it. |
+| `SYNC_MODE` | `none` | `none`, `hf`, `github`, `webdav` (SQLite only). |
+| `SYNC_INTERVAL` | `300` | Seconds between snapshot checks. |
+| `HF_TOKEN`, `HF_DATASET_REPO` | *(empty)* | For `SYNC_MODE=hf`. |
+| `GITHUB_TOKEN`, `GITHUB_BACKUP_REPO` | *(empty)* | For `SYNC_MODE=github`. |
+| `WEBDAV_URL`, `WEBDAV_USER`, `WEBDAV_PASSWORD` | *(empty)* | For `SYNC_MODE=webdav`. |
+| `ENABLE_ARIA2` | `false` | Start Aria2 RPC. |
+| `CUSTOM_BINARY_URL`, `CUSTOM_DIST_URL` | *(empty)* | Custom OpenList build. |
+| `KEEPALIVE_INTERVAL` | `600` | Internal self-ping interval in seconds. |
+| `KEEPALIVE_URL` | *(auto)* | Overrides the URL the internal keep-alive pings. |
 
 ---
 
-## 🕒 Enable 24/7 Keep-Alive via GitHub Actions
+## 📉 Honest limits of the free tier
 
-To ensure your cloud instance stays warm 24/7:
-1. Fork this repository on GitHub.
-2. Go to **Settings → Secrets and variables → Actions → Variables**.
-3. Create a repository variable named `INSTANCE_URLS` containing your cloud URL (e.g., `https://yourname-listcloud.hf.space`).
-4. Enable the **24/7 Cloud Keep-Alive Pinger** workflow in the **Actions** tab.
+* **512 MB RAM / 0.1 CPU** on Render Free. OpenList runs fine; Aria2 and heavy transcoding do not.
+* **15-minute spin-down.** The keep-alive handles it; the first request after a long gap takes ~1 minute.
+* **750 instance hours/month** per workspace. One always-on service uses ~744; a second free service will compete for the same hours.
+* **Ephemeral disk.** Without `DATABASE_URL` or `SYNC_MODE`, your mounts and settings disappear on restart.
+* **Limited outbound bandwidth** on the free workspace (check your workspace's included usage in the Render dashboard). OpenList normally redirects downloads straight to the cloud provider (HTTP 302), so most download traffic never touches Render. Proxied previews, WebDAV transfers and `?proxy` downloads do count.
+* **Neon Free** gives 1 GB storage and 100 compute-hours/month; if you exhaust compute, the database pauses until the next month. Keep the project small.
+* Free tiers are for hobby/testing. No uptime guarantee, and providers can restart or change limits at any time.
 
 ---
 
-## 📜 License & Attribution
+## 🩺 Troubleshooting
 
-* **ListCloud** is an independent community deployment toolkit and is not officially affiliated with the OpenList Team.
-* Powered by **[OpenListTeam/OpenList](https://github.com/OpenListTeam/OpenList)** and distributed under the **[AGPL-3.0 License](./LICENSE)** in full compliance with OpenList's open-source governance.
+| Symptom | Fix |
+| :--- | :--- |
+| "Application failed to respond" on first open | Render is cold-starting. Wait ~60 seconds and reload. |
+| Setup wizard keeps appearing | The container is not reaching `DATABASE_URL`. Check Render logs for `Using external PostgreSQL database`; verify the Neon string includes `?sslmode=require`. |
+| Login fails after you set `ADMIN_PASSWORD` | The password only applies to first setup. If the instance was already initialized, reset it in **Manage → Users**, or wipe the Neon database and redeploy. |
+| Settings vanish after a deploy | No persistent database. Add `DATABASE_URL` (or `SYNC_MODE`). |
+| Build fails downloading OpenList | The GitHub release URL changed or rate-limited. Redeploy; pin `OPENLIST_VERSION` with a build arg if needed. |
+| 502 after inactivity | Keep-alive is not running. Check the Actions run / cron-job. |
+| Forgot admin password | On a fresh database, delete and recreate the Neon project, then redeploy. OpenList has no email reset. |
+
+---
+
+## 🗂 Repository layout
+
+```text
+listcloud/
+├── Dockerfile                  # OpenList + sync/keepalive runtime
+├── render.yaml                 # Render Blueprint (free plan)
+├── docker-compose.yml          # Local / self-hosted
+├── scripts/
+│   ├── entrypoint.sh           # Port, DB, admin provisioning, custom builds
+│   ├── db-sync.sh              # SQLite snapshots to HF / GitHub / WebDAV
+│   └── keepalive.sh            # Internal self-ping
+├── cloudflare-worker/worker.js # Optional custom-domain proxy
+├── web/                        # Static config builder
+└── workflows-templates/        # Keep-alive and Pages workflows
+```
+
+---
+
+## 📜 License
+
+AGPL-3.0, matching upstream OpenList. ListCloud is an independent deployment project and is not affiliated with the OpenList Team. See [LICENSE](./LICENSE).

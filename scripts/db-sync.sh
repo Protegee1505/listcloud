@@ -161,9 +161,12 @@ if [ "${ACTION}" = "restore" ]; then
 elif [ "${ACTION}" = "backup" ]; then
   run_backup
 elif [ "${ACTION}" = "daemon" ]; then
+  # Best-effort final backup when the platform stops the container
+  trap 'run_backup || true; exit 0' TERM INT
   LAST_HASH=""
   while true; do
-    sleep "${SYNC_INTERVAL}"
+    sleep "${SYNC_INTERVAL}" &
+    wait $!
     if [ -f "${DATA_DIR}/data.db" ]; then
       CURRENT_HASH=$(md5sum "${DATA_DIR}/data.db" | awk '{print $1}')
       if [ "${CURRENT_HASH}" != "${LAST_HASH}" ]; then

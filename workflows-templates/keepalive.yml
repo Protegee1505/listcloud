@@ -1,34 +1,43 @@
-name: 24/7 Cloud Keep-Alive Pinger
+name: Keep the free instance awake
+
+# Render spins a Free web service down after 15 minutes without traffic.
+# This pings it every 5 minutes so it stays warm within the 750 free hours/month.
+#
+# Setup:
+#  1. Fork this repository.
+#  2. Settings -> Secrets and variables -> Actions -> Variables -> New variable
+#     Name: INSTANCE_URLS   Value: https://your-service.onrender.com
+#  3. Actions tab -> "Keep the free instance awake" -> Enable workflow.
+#
+# GitHub can delay scheduled runs under load. For stricter uptime, also add a
+# free cron at https://cron-job.org pointing at https://your-service.onrender.com/ping
 
 on:
   schedule:
-    # Runs every 10 minutes to ensure free cloud instances (HF Spaces, Render, Koyeb) never sleep
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       target_url:
-        description: "Optional override URL to ping immediately"
+        description: "Ping this URL once (optional)"
         required: false
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping User Cloud OpenList Instances
+      - name: Ping instance
         env:
           INSTANCE_URLS: ${{ vars.INSTANCE_URLS || secrets.INSTANCE_URLS }}
           MANUAL_URL: ${{ github.event.inputs.target_url }}
         run: |
           TARGETS="${MANUAL_URL:-$INSTANCE_URLS}"
           if [ -z "$TARGETS" ]; then
-            echo "No INSTANCE_URLS repository variable or secret configured yet."
-            echo "Add your cloud OpenList URL (e.g. https://username-listcloud.hf.space) to Settings -> Variables -> Actions -> INSTANCE_URLS."
+            echo "No INSTANCE_URLS variable set. Add it in Settings -> Variables -> Actions."
             exit 0
           fi
-
           for raw_url in $(echo "$TARGETS" | tr ',' ' '); do
-            clean_url="${raw_url%/}"
-            echo "Pinging ${clean_url}/ping ..."
-            HTTP_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 25 -A "ListCloud-24x7-KeepAlive/1.0" "${clean_url}/ping" || echo "000")
-            echo "Status for ${clean_url}: HTTP ${HTTP_STATUS}"
+            clean="${raw_url%/}"
+            code=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 \
+              -A "ListCloud-KeepAlive/1.0" "${clean}/ping" || echo "000")
+            echo "${clean} -> HTTP ${code}"
           done
