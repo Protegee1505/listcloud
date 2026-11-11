@@ -7,7 +7,7 @@ services:
     runtime: docker
     plan: free
     region: oregon
-    autoDeploy: false
+    autoDeployTrigger: "off"
     healthCheckPath: /ping
     dockerfilePath: ./Dockerfile
     envVars:
@@ -15,8 +15,8 @@ services:
         value: "10000"
       - key: ADMIN_USERNAME
         value: "admin"
-      # Leave empty to use OpenList's browser setup wizard on first visit.
-      # Set a value (4+ chars) to create the admin automatically on first boot.
+      # Enter a password (4+ chars) to create the admin account on first boot.
+      # Leave empty only if you will complete the browser setup wizard immediately.
       - key: ADMIN_PASSWORD
         sync: false
       - key: JWT_SECRET

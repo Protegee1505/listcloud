@@ -107,7 +107,7 @@
       "=== First login ===",
       pass
         ? `Username : ${user}\nPassword : ${pass}`
-        : "No password was pre-set: the first visit opens OpenList's setup wizard.",
+        : "No password was pre-set: the first visit opens OpenList's setup wizard.\nFinish it right away - until then, anyone with the URL can claim admin.",
       "",
       "The first request after a spin-down takes about a minute.",
     ].join("\n");

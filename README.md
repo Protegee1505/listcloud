@@ -52,11 +52,13 @@ Render's free filesystem is **ephemeral**: it is wiped on every restart, redeplo
 2. Sign in with GitHub when asked.
 3. Render reads [`render.yaml`](./render.yaml) and shows a Blueprint named **listcloud**. Keep the **Free** plan.
 4. Fill in the environment variables:
-   * **`DATABASE_URL`** → paste the Neon connection string from Step 1.
-   * **`ADMIN_PASSWORD`** → enter a password of 4+ characters, **or leave it empty** to get OpenList's browser setup wizard on first visit.
+   * **`DATABASE_URL`** → paste the Neon connection string from Step 1 (this is what makes your data survive restarts).
+   * **`ADMIN_PASSWORD`** → a password of 4+ characters. Setting it here creates the `admin` account automatically on first boot.
    * `ADMIN_USERNAME` is `admin` and only matters when `ADMIN_PASSWORD` is set.
    * `CUSTOM_TITLE` → your site name.
 5. Click **Apply** / **Deploy** and wait for the build (typically 3–6 minutes).
+
+> **Set `ADMIN_PASSWORD` now if you can.** If you leave it empty, the site opens OpenList's setup wizard — but until someone completes it, any visitor to your URL can claim the admin account. If you prefer the wizard, finish it immediately after the first deploy.
 
 > Render might ask you to verify your account by email, but does not require a card for Free web services. If you have no payment method on file, Render suspends services when you hit a limit instead of billing you.
 
