@@ -133,6 +133,23 @@ Snapshots run every `SYNC_INTERVAL` seconds (default 300) when the database chan
 | `ENABLE_ARIA2` | `true` to start Aria2 RPC on port 6800. Needs RAM; leave `false` on the 512 MB free instance. |
 | `ENABLE_FFMPEG` | Build-time arg only: `docker build --build-arg INSTALL_FFMPEG=true`. Not available on Render's prebuilt image. |
 
+### Updating your instance
+
+The live URL never picks up code changes by itself. It runs a container image built from your repo, and this repo's `render.yaml` deliberately sets `autoDeployTrigger: "off"`.
+
+| What you changed | What to do |
+| :--- | :--- |
+| Environment variables (including `CUSTOM_BINARY_URL` / `CUSTOM_DIST_URL`) | Edit them in **Render → Environment**, then choose **Save and deploy**. The container restarts and re-runs the entrypoint; no rebuild. |
+| `Dockerfile`, `scripts/` | Push to the repo Render builds, then **Manual Deploy → Deploy latest commit**. To deploy on every push, enable **Settings → Auto-Deploy → On Commit** or set `autoDeployTrigger: commit`. |
+| `render.yaml` | Push it. Render auto-syncs a Blueprint by default and redeploys affected services; keep all conflicting settings in this file, because a sync overwrites them. Turn off **Auto Sync** on the Blueprint page if you prefer manual syncs. |
+| OpenList source (Go) | Build your binary, upload it somewhere reachable, point `CUSTOM_BINARY_URL` at it, then **Save and deploy**. The entrypoint downloads it at container boot. |
+| OpenList frontend only | Build `dist.tar.gz`, set `CUSTOM_DIST_URL`, then **Save and deploy**. No Go build or image rebuild needed. |
+| A prebuilt Docker image | Push a new tag and deploy it from Render. |
+
+If you replaced the asset behind an unchanged `CUSTOM_BINARY_URL` / `CUSTOM_DIST_URL`, you can use **Manual Deploy → Restart service** instead of a full deploy — the entrypoint re-downloads it on boot. If the download fails, the log shows a warning and the bundled official binary keeps running.
+
+> Deployed with the one-click link against the upstream repo? **Fork it first** — you can only push to a repository you own, and Render must build from that fork. Redeploys do not touch your data as long as `DATABASE_URL` (or a sync mode) is configured.
+
 ### Custom domain (optional, free)
 
 Deploy [`cloudflare-worker/worker.js`](./cloudflare-worker/worker.js) as a Cloudflare Worker (Workers' free plan needs no card), set `UPSTREAM_URL` to your Render URL, then attach a domain to the Worker.
