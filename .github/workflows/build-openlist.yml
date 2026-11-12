@@ -1,0 +1,100 @@
+name: build custom OpenList with storage usage
+
+# ListCloud patch: OpenList's Terabox and Dropbox drivers gain driver.WithDetails
+# so /manage/storages can show used / free / total per mount. The build is
+# published as a release asset; point CUSTOM_BINARY_URL at it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-openlist.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'OpenList tag to patch (upstream repo OpenListTeam/OpenList)'
+        required: true
+        default: 'v4.2.9'
+      publish:
+        description: 'Upload the binary as a release asset'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  UPSTREAM: OpenListTeam/OpenList
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      OL_VERSION: ${{ inputs.version || 'v4.2.9' }}
+    steps:
+      - name: Checkout this repo (for the patch)
+        uses: actions/checkout@v4
+        with:
+          path: patch-src
+
+      - name: Fetch OpenList source at ${{ env.OL_VERSION }}
+        run: |
+          set -eux
+          mkdir -p src
+          curl -fsSL "https://codeload.github.com/${UPSTREAM}/tar.gz/refs/tags/${OL_VERSION}" -o ol.tar.gz
+          tar -xzf ol.tar.gz -C src --strip-components=1
+
+      - name: Apply the storage-usage patch
+        run: |
+          set -eux
+          cp patch-src/patches/terabox_details.go src/drivers/terabox/details.go
+          cp patch-src/patches/dropbox_details.go src/drivers/dropbox/details.go
+          grep -n "GetDetails" src/drivers/terabox/details.go src/drivers/dropbox/details.go
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          cache-dependency-path: src/go.sum
+
+      - name: Vet and build
+        working-directory: src
+        run: |
+          set -eux
+          export GOTOOLCHAIN=local
+          go vet ./drivers/terabox/ ./drivers/dropbox/
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=jsoniter -ldflags="-s -w" -o ../openlist .
+          file ../openlist || true
+          ls -l ../openlist
+
+      - name: Package
+        run: |
+          set -eux
+          tar -czf "openlist-linux-amd64-${OL_VERSION}-usage.tar.gz" openlist
+          sha256sum openlist-linux-amd64-*.tar.gz > SHA256SUMS
+
+      - name: Publish release asset
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.OL_VERSION }}-usage
+          name: 'OpenList ${{ env.OL_VERSION }} + storage usage patch'
+          body: |
+            Patched OpenList build for ListCloud: Terabox and Dropbox implement
+            `driver.WithDetails`, so `/api/admin/storage/list` returns
+            `mount_details` and the storage management page shows
+            used / free / total space for each mount.
+
+            Built from `${{ env.UPSTREAM }}` tag `${{ env.OL_VERSION }}`.
+          files: |
+            openlist-linux-amd64-*.tar.gz
+            SHA256SUMS
+          fail_on_unmatched_files: true
+
+      - name: Upload workflow artifact (every run)
+        uses: actions/upload-artifact@v4
+        with:
+          name: openlist-usage-${{ github.run_number }}
+          path: |
+            openlist-linux-amd64-*.tar.gz
+            SHA256SUMS
+          retention-days: 30
