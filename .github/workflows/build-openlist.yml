@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/build-openlist.yml'
+      - 'patches/**'
   workflow_dispatch:
     inputs:
       version:
@@ -31,6 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OL_VERSION: ${{ inputs.version || 'v4.2.9' }}
+      # Suffix makes a patched build identifiable at runtime via
+      # `openlist version` and /api/public/settings.
+      BUILD_VERSION: ${{ inputs.version || 'v4.2.9' }}+usage
     steps:
       - name: Checkout this repo (for the patch)
         uses: actions/checkout@v4
@@ -62,15 +66,27 @@ jobs:
           set -eux
           export GOTOOLCHAIN=local
           go vet ./drivers/terabox/ ./drivers/dropbox/
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=jsoniter -ldflags="-s -w" -o ../openlist .
-          file ../openlist || true
+          LDFLAGS="-w -s \
+            -X 'github.com/OpenListTeam/OpenList/v4/internal/conf.Version=${BUILD_VERSION}' \
+            -X 'github.com/OpenListTeam/OpenList/v4/internal/conf.GitCommit=${GITHUB_SHA::7}' \
+            -X 'github.com/OpenListTeam/OpenList/v4/internal/conf.BuiltAt=$(date +'%F %T %z')' \
+            -X 'github.com/OpenListTeam/OpenList/v4/internal/conf.WebVersion=${OL_VERSION}'"
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=jsoniter -ldflags="$LDFLAGS" -o ../openlist .
           ls -l ../openlist
+
+      - name: Verify the build reports the patched version
+        run: |
+          set -eux
+          chmod +x openlist
+          ./openlist version | tee version.txt
+          grep -F "Version: ${BUILD_VERSION}" version.txt
 
       - name: Package
         run: |
           set -eux
           tar -czf "openlist-linux-amd64-${OL_VERSION}-usage.tar.gz" openlist
           sha256sum openlist-linux-amd64-*.tar.gz > SHA256SUMS
+          cat SHA256SUMS
 
       - name: Publish release asset
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
@@ -85,6 +101,7 @@ jobs:
             used / free / total space for each mount.
 
             Built from `${{ env.UPSTREAM }}` tag `${{ env.OL_VERSION }}`.
+            Reports itself as `${{ env.BUILD_VERSION }}` via `openlist version`.
           files: |
             openlist-linux-amd64-*.tar.gz
             SHA256SUMS
@@ -97,4 +114,5 @@ jobs:
           path: |
             openlist-linux-amd64-*.tar.gz
             SHA256SUMS
+            version.txt
           retention-days: 30
